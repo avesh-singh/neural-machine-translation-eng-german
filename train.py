@@ -1,8 +1,9 @@
 from model import *
-from util import *
 from data import *
-import pickle
-import random
+import time
+import math
+import matplotlib.pyplot as plt
+
 
 # Setup the model and train
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
@@ -41,27 +42,21 @@ def train(batch, clip):
 
 def train_iters():
     start = time.time()
-    plot_loss=[]
+    plot_loss = []
     print_loss_total = 0
     plot_loss_total = 0
-    print_every = 1500
+    print_every = 500
     plot_every = 100
     clip = 1
     best_valid_loss = float('inf')
     for epoch in range(1, EPOCHS + 1):
         train_loss = 0
-        epoch_time = time.time()
         model.train()
         for i, batch in enumerate(train_data):
             loss = train(batch, clip)
             train_loss += loss
             print_loss_total += loss
             plot_loss_total += loss
-            if i % print_every == 0 and i != 0:
-                print_loss_avg = print_loss_total / (i + 1)
-                print_loss_total = 0
-                print(f'{time_since(epoch_time, (i+1) / len(train_data))} ({i} {round(i/ len(train_data) * 100, 4)}%'
-                      f' {round(print_loss_avg, 4)})')
 
             if i % plot_every == 0 and i != 0:
                 plot_loss_avg = plot_loss_total / plot_every
@@ -70,7 +65,7 @@ def train_iters():
         valid_loss = evaluate(model, valid_data)
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
-            torch.save(model.state_dict(), 'model/model.pt')
+            torch.save(model.state_dict(), 'model.pt')
         print(f"Epoch: {epoch} | Time: {time_since(start, epoch / EPOCHS)}")
         print(f"\tTrain loss: {train_loss:.3f}      | Train ppl: {math.exp(train_loss):7.3f}")
         print(f"\tValidation loss: {valid_loss:.3f} | Validation ppl: {math.exp(valid_loss):7.3f}")
@@ -92,9 +87,24 @@ def evaluate(model, data):
     return loss / len(data)
 
 
+def as_minutes(s):
+    m = math.floor(s / 60)
+    s -= m * 60
+    return f"{m}m {s:.4f}s"
+
+
+def time_since(start_time, fraction):
+    now = time.time()
+    s = now - start_time
+    rs = s / fraction - s
+    return f"{as_minutes(s)} (- {as_minutes(rs)})"
+
+
 if __name__ == "__main__":
     losses = train_iters()
-    show_plot(losses)
-    model.load_state_dict(torch.load('model/model.pt'))
+    plt.plot(losses)
+    plt.show()
+    print("\ntesting...")
+    model.load_state_dict(torch.load('model.pt'))
     test_loss = evaluate(model, test_data)
-    print(f"\n\nTesting loss: {test_loss:.3f} | Testing ppl: {math.exp(test_loss):7.3f}")
+    print(f"\nTesting loss: {test_loss:.3f} | Testing ppl: {math.exp(test_loss):7.3f}")

@@ -13,8 +13,6 @@ class EncoderRNN(nn.Module):
 
     def forward(self, input_word):
         embedding = self.embedding(input_word)
-        # max_len, batch_size, hidden_size = embedding.shape
-        # embedding = embedding.view(batch_size, max_len, hidden_size)
         output, (hidden, cell) = self.lstm(embedding)
         return hidden, cell
 
