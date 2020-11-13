@@ -9,3 +9,5 @@ Feel free to fork this repo and extend this solution.
 Basic Encoder-Decoder RNN (LSTM) results - Testing loss: 2.855 | Testing perplexity:  17.378
 
 Encoder-Decoder RNN with context reuse results - Testing loss: 2.656 | Testing ppl:  14.235
+
+Encoder-Decoder GRU with attention results - Testing loss: 2.635 | Testing ppl:  13.948
