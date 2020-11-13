@@ -4,37 +4,38 @@ import random
 
 
 class EncoderRNN(nn.Module):
-    def __init__(self, embedding_size, input_size, hidden_size, layers=1, dropout=0.1):
+    def __init__(self, embedding_size, input_size, hidden_size, dropout=0.1):
         super(EncoderRNN, self).__init__()
         self.hidden_size = hidden_size
-        self.layers = layers
         self.embedding = nn.Embedding(input_size, embedding_size)
-        self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers=layers, dropout=dropout)
+        self.dropout = nn.Dropout(dropout)
+        self.gru = nn.GRU(embedding_size, hidden_size)
 
     def forward(self, input_word):
-        embedding = self.embedding(input_word)
-        output, (hidden, cell) = self.lstm(embedding)
-        return hidden, cell
+        embedding = self.dropout(self.embedding(input_word))
+        output, hidden = self.gru(embedding)
+        return hidden
 
 
 class DecoderRNN(nn.Module):
-    def __init__(self, embedding_size, input_size, hidden_size, output_size, layers=1, dropout=0.1):
+    def __init__(self, embedding_size, input_size, hidden_size, output_size, dropout=0.1):
         super(DecoderRNN, self).__init__()
         self.hidden_size = hidden_size
         self.output_size = output_size
-        self.layers = layers
         self.embedding = nn.Embedding(input_size, embedding_size)
         self.dropout = nn.Dropout(dropout)
-        self.lstm = nn.LSTM(embedding_size, hidden_size, num_layers=layers, dropout=dropout)
-        self.output = nn.Linear(hidden_size, output_size)
+        self.gru = nn.GRU(embedding_size + hidden_size, hidden_size)
+        self.output = nn.Linear(2 * hidden_size + embedding_size, output_size)
         self.softmax = nn.LogSoftmax(dim=-1)
 
-    def forward(self, input_word, hidden, cell):
+    def forward(self, input_word, hidden, context):
         embedding = self.dropout(self.embedding(input_word))
-        output, (hidden, cell) = self.lstm(embedding, (hidden, cell))
-        output = self.output(output)
+        rnn_input = torch.cat((embedding, context), dim=2)
+        output, hidden = self.gru(rnn_input, hidden)
+        linear_input = torch.cat((hidden, context, embedding), dim=2)
+        output = self.output(linear_input)
         output = self.softmax(output)
-        return output, hidden, cell
+        return output, hidden
 
 
 class Seq2Seq(nn.Module):
@@ -43,7 +44,7 @@ class Seq2Seq(nn.Module):
         self.encoder = encoder
         self.decoder = decoder
         self.device = device
-        assert encoder.layers == decoder.layers, "encoder and decoder must have equal number of layers"
+        assert encoder.hidden_size == decoder.hidden_size, "encoder and decoder must have equal units in hidden layer"
 
     def forward(self, input, target, teacher_forcing_ratio=0.5):
         batch_size = target.shape[1]
@@ -51,10 +52,11 @@ class Seq2Seq(nn.Module):
         output_size = self.decoder.output_size
 
         outputs = torch.zeros(seq_len, batch_size, output_size, device=self.device)
-        hidden, cell = self.encoder(input)
+        hidden = self.encoder(input)
+        context = hidden
         dec_input = target[0, :].unsqueeze(0)
         for i in range(seq_len):
-            dec_output, hidden, cell = self.decoder(dec_input, hidden, cell)
+            dec_output, hidden = self.decoder(dec_input, hidden, context)
             outputs[i] = dec_output
             if random.random() < teacher_forcing_ratio:
                 dec_input = target[i].unsqueeze(0)

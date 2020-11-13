@@ -9,14 +9,14 @@ import matplotlib.pyplot as plt
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 HIDDEN_SIZE = 512
 EMBEDDING_SIZE = 256
-EPOCHS = 15
+EPOCHS = 10
 NUM_LAYERS = 2
 DROPOUT = 0.3
 teacher_forcing_ratio = 0.4
 
 (train_data, valid_data, test_data), src, tgt = prepare_data()
-encoder = EncoderRNN(EMBEDDING_SIZE, len(src.vocab), HIDDEN_SIZE, NUM_LAYERS, DROPOUT)
-decoder = DecoderRNN(EMBEDDING_SIZE, len(tgt.vocab), HIDDEN_SIZE, len(tgt.vocab), NUM_LAYERS, DROPOUT)
+encoder = EncoderRNN(EMBEDDING_SIZE, len(src.vocab), HIDDEN_SIZE, DROPOUT)
+decoder = DecoderRNN(EMBEDDING_SIZE, len(tgt.vocab), HIDDEN_SIZE, len(tgt.vocab), DROPOUT)
 model = Seq2Seq(encoder, decoder, device).to(device)
 model.apply(init_weights)
 model_optimizer = torch.optim.Adam(model.parameters())
