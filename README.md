@@ -7,4 +7,5 @@ Please check other branches of this repo as well. I have implemented several imp
 
 Basic Encoder-Decoder RNN (LSTM) results - Training time: 5m 44.22s (15 epochs) | Testing loss: 2.921 | Testing ppl:  18.554
 
-Encoder-Decoder RNN with context reuse results - Testing loss: 2.656 | Testing ppl:  14.235
+Encoder-Decoder GRU with context reuse results - Training time: 3m 33.66s (10 epochs) | Testing loss: 2.654 | Testing
+ ppl:  14.209
