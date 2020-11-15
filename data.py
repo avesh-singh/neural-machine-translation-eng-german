@@ -21,7 +21,8 @@ def prepare_data():
     src = Field(tokenize=en_tokenize,
                 init_token='<SOS>',
                 eos_token='<EOS>',
-                lower=True)
+                lower=True,
+                include_lengths=True)
     tgt = Field(tokenize=de_tokenize,
                 init_token='<SOS>',
                 eos_token='<EOS>',
@@ -33,7 +34,9 @@ def prepare_data():
     return BucketIterator.splits(
         (train, valid, test),
         batch_size=BATCH_SIZE,
-        device=device
+        device=device,
+        sort_within_batch=True,
+        sort_key=lambda x: len(x.src)
     ), src, tgt
 
 

@@ -11,3 +11,6 @@ Basic Encoder-Decoder RNN (LSTM) results - Testing loss: 2.855 | Testing perplex
 Encoder-Decoder RNN with context reuse results - Testing loss: 2.656 | Testing ppl:  14.235
 
 Encoder-Decoder GRU with attention results - Testing loss: 2.635 | Testing ppl:  13.948
+
+Encoder-Attention-Decoder GRU using packed sequence results - Training Time: 4m 55.76s | Testing loss: 2.552 | Testing
+ ppl:  12.835

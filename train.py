@@ -17,12 +17,14 @@ DROPOUT = 0.3
 teacher_forcing_ratio = 0.4
 
 (train_data, valid_data, test_data), src, tgt = prepare_data()
+SRC_PAD_INDEX = src.vocab.stoi[src.pad_token]
+
 encoder = EncoderRNN(EMBEDDING_SIZE, len(src.vocab), ENC_HIDDEN_SIZE, DROPOUT, BIDIRECTIONAL)
 attention = Attention(ENC_HIDDEN_SIZE, DEC_HIDDEN_SIZE, BIDIRECTIONAL)
 decoder = DecoderRNN(EMBEDDING_SIZE, len(tgt.vocab), ENC_HIDDEN_SIZE, DEC_HIDDEN_SIZE, len(tgt.vocab), attention,
                      DROPOUT,
                      BIDIRECTIONAL)
-model = Seq2Seq(encoder, decoder, device).to(device)
+model = Seq2Seq(encoder, decoder, device, SRC_PAD_INDEX).to(device)
 model.apply(init_weights)
 model_optimizer = torch.optim.Adam(model.parameters())
 criterion = torch.nn.CrossEntropyLoss(ignore_index=tgt.vocab.stoi[tgt.pad_token])
@@ -30,10 +32,10 @@ criterion = torch.nn.CrossEntropyLoss(ignore_index=tgt.vocab.stoi[tgt.pad_token]
 
 def train(batch, clip):
     model_optimizer.zero_grad()
-    src = batch.src
+    src, src_len = batch.src
     tgt = batch.trg
 
-    output = model(src, tgt, teacher_forcing_ratio)
+    output, attn_weights = model(src, src_len, tgt, teacher_forcing_ratio)
 
     output_dim = output.shape[-1]
     output = output[1:].view(-1, output_dim)
@@ -82,9 +84,9 @@ def evaluate(model, data):
     loss = 0
     with torch.no_grad():
         for i, batch in enumerate(data):
-            src = batch.src
+            src, src_len = batch.src
             tgt = batch.trg
-            output = model(src, tgt)
+            output, attn_weights = model(src, src_len, tgt)
             output_dim = output.size(-1)
             output = output[1:].view(-1, output_dim)
             tgt = tgt[1:].view(-1)
