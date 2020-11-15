@@ -9,4 +9,4 @@ Basic Encoder-Decoder RNN (LSTM) results - Training time: 5m 44.22s (15 epochs) 
 
 Encoder-Decoder GRU with context reuse results - Training time: 3m 33.66s (10 epochs) | Testing loss: 2.654 | Testing ppl:  14.209
 
-Encoder-Decoder GRU with attention results - Testing loss: 2.635 | Testing ppl:  13.948
+Encoder-Decoder GRU with attention results - Training time: 8m 53.24 (10 epochs) | Testing loss: 2.608 | Testing ppl:  13.567
